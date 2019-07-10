@@ -1,7 +1,7 @@
 #
 # This file is part of pyasn1 software.
 #
-# Copyright (c) 2005-2018, Ilya Etingof <etingof@gmail.com>
+# Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
 # License: http://snmplabs.com/pyasn1/license.html
 #
 import math
@@ -1065,7 +1065,7 @@ class SequenceOf(BaseTestCase):
         else:
             assert False, 'IndexError not raised'
 
-        # this is a deviation from standart sequence protocol
+        # this is a deviation from standard sequence protocol
         assert not s[1]
 
     def testSetItem(self):
@@ -1406,6 +1406,22 @@ class Sequence(BaseTestCase):
         assert s.getComponentByPosition(1, default=None) == str2octs('test')
         s.clear()
         assert s.getComponentByPosition(1, default=None) is None
+
+    def testGetComponentWithConstructedDefault(self):
+
+        class Sequence(univ.Sequence):
+            componentType = namedtype.NamedTypes(
+                namedtype.NamedType('name', univ.OctetString()),
+                namedtype.DefaultedNamedType('nick', univ.SequenceOf(
+                    componentType=univ.Integer()
+                ).setComponentByPosition(0, 1)),
+            )
+
+        s = Sequence()
+
+        assert s.getComponentByPosition(1, default=None, instantiate=False) is None
+        assert s.getComponentByPosition(1, instantiate=False) is univ.noValue
+        assert s.getComponentByPosition(1) == [1]
 
     def testGetComponentNoInstantiation(self):
 
