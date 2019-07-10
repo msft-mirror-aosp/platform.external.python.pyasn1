@@ -1,7 +1,7 @@
 #
 # This file is part of pyasn1 software.
 #
-# Copyright (c) 2005-2018, Ilya Etingof <etingof@gmail.com>
+# Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
 # License: http://snmplabs.com/pyasn1/license.html
 #
 import sys
@@ -25,7 +25,7 @@ class SingleValueConstraintTestCase(BaseTestCase):
         self.c2 = constraint.SingleValueConstraint(3, 4)
 
     def testCmp(self):
-        assert self.c1 == self.c1, 'comparation fails'
+        assert self.c1 == self.c1, 'comparison fails'
 
     def testHash(self):
         assert hash(self.c1) != hash(self.c2), 'hash() fails'
@@ -195,7 +195,6 @@ class InnerTypeConstraintTestCase(BaseTestCase):
         try:
             c(4, 0)
         except error.ValueConstraintError:
-            raise
             assert 0, 'constraint check fails'
         try:
             c(4, 1)

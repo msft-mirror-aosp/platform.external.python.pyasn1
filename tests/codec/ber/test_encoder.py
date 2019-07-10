@@ -1,7 +1,7 @@
 #
 # This file is part of pyasn1 software.
 #
-# Copyright (c) 2005-2018, Ilya Etingof <etingof@gmail.com>
+# Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
 # License: http://snmplabs.com/pyasn1/license.html
 #
 import sys
@@ -392,14 +392,14 @@ class RealEncoderTestCase(BaseTestCase):
         # choose binEncBase automatically for all further Real (testBin[4-7])
         binEncBase, encoder.typeMap[univ.Real.typeId].binEncBase = encoder.typeMap[univ.Real.typeId].binEncBase, None
         assert encoder.encode(
-            univ.Real((1, 2, 0))  # check exponenta = 0
+            univ.Real((1, 2, 0))  # check exponent = 0
         ) == ints2octs((9, 3, 128, 0, 1))
         encoder.typeMap[univ.Real.typeId].binEncBase = binEncBase
 
     def testBin5(self):
         assert encoder.encode(
             univ.Real((3, 2, -1020))  # case of 2 octs for exponent and
-            # negative exponenta and abs(exponent) is
+            # negative exponent and abs(exponent) is
             # all 1's and fills the whole octet(s)
         ) == ints2octs((9, 4, 129, 252, 4, 3))
 
