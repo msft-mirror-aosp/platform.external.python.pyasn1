@@ -1,4 +1,24 @@
 
+Revision 0.4.5, released 29-12-2018
+-----------------------------------
+
+- Debug logging refactored for more efficiency when disabled and
+  for more functionality when in use. Specifically, the global
+  LOG object can easily be used from any function/method, not just
+  from codec main loop as it used to be.
+- More debug logging added to BER family of codecs to ease encoding
+  problems troubleshooting.
+- Copyright notice extended to the year 2019
+- Fixed defaulted constructed SEQUENCE component initialization.
+
+Revision 0.4.4, released 26-07-2018
+-----------------------------------
+
+- Fixed native encoder type map to include all ASN.1 types
+  rather than just ambiguous ones
+- Fixed crash in `.prettyPrint` of `Sequence` and `Set` occurring
+  at OPTIONAL components
+
 Revision 0.4.3, released 23-05-2018
 -----------------------------------
 
