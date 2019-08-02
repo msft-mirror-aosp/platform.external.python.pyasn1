@@ -835,7 +835,7 @@ class SequenceDecoderWithSchemaTestCase(BaseTestCase):
         ) == (self.s, null)
 
 
-class SequenceDecoderWithUnaggedOpenTypesTestCase(BaseTestCase):
+class SequenceDecoderWithUntaggedOpenTypesTestCase(BaseTestCase):
     def setUp(self):
         openType = opentype.OpenType(
             'id',
@@ -970,6 +970,159 @@ class SequenceDecoderWithExplicitlyTaggedOpenTypesTestCase(BaseTestCase):
         assert not r
         assert s[0] == 3
         assert s[1] == univ.OctetString(hexValue='02010C')
+
+
+class SequenceDecoderWithUnaggedSetOfOpenTypesTestCase(BaseTestCase):
+    def setUp(self):
+        openType = opentype.OpenType(
+            'id',
+            {1: univ.Integer(),
+             2: univ.OctetString()}
+        )
+        self.s = univ.Sequence(
+            componentType=namedtype.NamedTypes(
+                namedtype.NamedType('id', univ.Integer()),
+                namedtype.NamedType('blob', univ.SetOf(componentType=univ.Any()),
+                                    openType=openType)
+            )
+        )
+
+    def testDecodeOpenTypesChoiceOne(self):
+        s, r = decoder.decode(
+            ints2octs((48, 8, 2, 1, 1, 49, 3, 2, 1, 12)), asn1Spec=self.s,
+            decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 1
+        assert s[1][0] == 12
+
+    def testDecodeOpenTypesChoiceTwo(self):
+        s, r = decoder.decode(
+            ints2octs((48, 18, 2, 1, 2, 49, 13, 4, 11, 113, 117, 105, 99,
+                       107, 32, 98, 114, 111, 119, 110)), asn1Spec=self.s,
+            decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 2
+        assert s[1][0] == univ.OctetString('quick brown')
+
+    def testDecodeOpenTypesUnknownType(self):
+        try:
+            s, r = decoder.decode(
+                ints2octs((48, 6, 2, 1, 2, 6, 1, 39)), asn1Spec=self.s,
+                decodeOpenTypes=True
+            )
+
+        except PyAsn1Error:
+            pass
+
+        else:
+            assert False, 'unknown open type tolerated'
+
+    def testDecodeOpenTypesUnknownId(self):
+        s, r = decoder.decode(
+            ints2octs((48, 8, 2, 1, 3, 49, 3, 2, 1, 12)), asn1Spec=self.s,
+            decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 3
+        assert s[1][0] == univ.OctetString(hexValue='02010c')
+
+    def testDontDecodeOpenTypesChoiceOne(self):
+        s, r = decoder.decode(
+            ints2octs((48, 8, 2, 1, 1, 49, 3, 2, 1, 12)), asn1Spec=self.s
+        )
+        assert not r
+        assert s[0] == 1
+        assert s[1][0] == ints2octs((2, 1, 12))
+
+    def testDontDecodeOpenTypesChoiceTwo(self):
+        s, r = decoder.decode(
+            ints2octs((48, 18, 2, 1, 2, 49, 13, 4, 11, 113, 117, 105, 99,
+                       107, 32, 98, 114, 111, 119, 110)), asn1Spec=self.s
+        )
+        assert not r
+        assert s[0] == 2
+        assert s[1][0] == ints2octs((4, 11, 113, 117, 105, 99, 107, 32, 98, 114,
+                                     111, 119, 110))
+
+
+class SequenceDecoderWithImplicitlyTaggedSetOfOpenTypesTestCase(BaseTestCase):
+    def setUp(self):
+        openType = opentype.OpenType(
+            'id',
+            {1: univ.Integer(),
+             2: univ.OctetString()}
+        )
+        self.s = univ.Sequence(
+            componentType=namedtype.NamedTypes(
+                namedtype.NamedType('id', univ.Integer()),
+                namedtype.NamedType(
+                    'blob', univ.SetOf(
+                        componentType=univ.Any().subtype(
+                            implicitTag=tag.Tag(
+                                tag.tagClassContext, tag.tagFormatSimple, 3))),
+                    openType=openType
+                )
+            )
+        )
+
+    def testDecodeOpenTypesChoiceOne(self):
+        s, r = decoder.decode(
+            ints2octs((48, 10, 2, 1, 1, 49, 5, 131, 3, 2, 1, 12)),
+            asn1Spec=self.s, decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 1
+        assert s[1][0] == 12
+
+    def testDecodeOpenTypesUnknownId(self):
+        s, r = decoder.decode(
+            ints2octs((48, 10, 2, 1, 3, 49, 5, 131, 3, 2, 1, 12)),
+            asn1Spec=self.s, decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 3
+        assert s[1][0] == univ.OctetString(hexValue='02010C')
+
+
+class SequenceDecoderWithExplicitlyTaggedSetOfOpenTypesTestCase(BaseTestCase):
+    def setUp(self):
+        openType = opentype.OpenType(
+            'id',
+            {1: univ.Integer(),
+             2: univ.OctetString()}
+        )
+        self.s = univ.Sequence(
+            componentType=namedtype.NamedTypes(
+                namedtype.NamedType('id', univ.Integer()),
+                namedtype.NamedType(
+                    'blob', univ.SetOf(
+                        componentType=univ.Any().subtype(
+                            explicitTag=tag.Tag(
+                                tag.tagClassContext, tag.tagFormatSimple, 3))),
+                    openType=openType
+                )
+            )
+        )
+
+    def testDecodeOpenTypesChoiceOne(self):
+        s, r = decoder.decode(
+            ints2octs((48, 10, 2, 1, 1, 49, 5, 131, 3, 2, 1, 12)),
+            asn1Spec=self.s, decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 1
+        assert s[1][0] == 12
+
+    def testDecodeOpenTypesUnknownId(self):
+        s, r = decoder.decode(
+            ints2octs( (48, 10, 2, 1, 3, 49, 5, 131, 3, 2, 1, 12)),
+            asn1Spec=self.s, decodeOpenTypes=True
+        )
+        assert not r
+        assert s[0] == 3
+        assert s[1][0] == univ.OctetString(hexValue='02010C')
 
 
 class SetDecoderTestCase(BaseTestCase):
@@ -1427,6 +1580,38 @@ class NonStringDecoderTestCase(BaseTestCase):
     def testAny(self):
         s, _ = decoder.decode(univ.Any(self.substrate), asn1Spec=self.s)
         assert self.s == s
+
+
+class ErrorOnDecodingTestCase(BaseTestCase):
+
+    def testErrorCondition(self):
+        decode = decoder.Decoder(decoder.tagMap, decoder.typeMap)
+
+        try:
+            asn1Object, rest = decode(str2octs('abc'))
+
+        except PyAsn1Error:
+            exc = sys.exc_info()[1]
+            assert isinstance(exc, PyAsn1Error), (
+                'Unexpected exception raised %r' % (exc,))
+
+        else:
+            assert False, 'Unexpected decoder result %r' % (asn1Object,)
+
+    def testRawDump(self):
+        decode = decoder.Decoder(decoder.tagMap, decoder.typeMap)
+
+        decode.defaultErrorState = decoder.stDumpRawValue
+
+        asn1Object, rest = decode(ints2octs(
+            (31, 8, 2, 1, 1, 131, 3, 2, 1, 12)))
+
+        assert isinstance(asn1Object, univ.Any), (
+            'Unexpected raw dump type %r' % (asn1Object,))
+        assert asn1Object.asNumbers() == (31, 8, 2, 1, 1), (
+            'Unexpected raw dump value %r' % (asn1Object,))
+        assert rest == ints2octs((131, 3, 2, 1, 12)), (
+            'Unexpected rest of substrate after raw dump %r' % rest)
 
 
 suite = unittest.TestLoader().loadTestsFromModule(sys.modules[__name__])
