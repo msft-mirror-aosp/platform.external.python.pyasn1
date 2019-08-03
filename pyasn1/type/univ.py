@@ -31,15 +31,17 @@ __all__ = ['Integer', 'Boolean', 'BitString', 'OctetString', 'Null',
 # "Simple" ASN.1 types (yet incomplete)
 
 
-class Integer(base.AbstractSimpleAsn1Item):
-    """Create |ASN.1| type or object.
+class Integer(base.SimpleAsn1Type):
+    """Create |ASN.1| schema or value object.
 
-    |ASN.1| objects are immutable and duck-type Python :class:`int` objects.
+    |ASN.1| class is based on :class:`~pyasn1.type.base.SimpleAsn1Type`, its
+    objects are immutable and duck-type Python :class:`int` objects.
 
     Keyword Args
     ------------
     value: :class:`int`, :class:`str` or |ASN.1| object
-        Python integer or string literal or |ASN.1| class instance.
+        Python :class:`int` or :class:`str` literal or |ASN.1| class
+        instance. If `value` is not given, schema object will be created.
 
     tagSet: :py:class:`~pyasn1.type.tag.TagSet`
         Object representing non-default ASN.1 tag(s)
@@ -52,7 +54,7 @@ class Integer(base.AbstractSimpleAsn1Item):
 
     Raises
     ------
-    :py:class:`~pyasn1.error.PyAsn1Error`
+    ~pyasn1.error.ValueConstraintError, ~pyasn1.error.PyAsn1Error
         On constraint violation or bad initializer.
 
     Examples
@@ -94,13 +96,13 @@ class Integer(base.AbstractSimpleAsn1Item):
     namedValues = namedval.NamedValues()
 
     # Optimization for faster codec lookup
-    typeId = base.AbstractSimpleAsn1Item.getTypeId()
+    typeId = base.SimpleAsn1Type.getTypeId()
 
     def __init__(self, value=noValue, **kwargs):
         if 'namedValues' not in kwargs:
             kwargs['namedValues'] = self.namedValues
 
-        base.AbstractSimpleAsn1Item.__init__(self, value, **kwargs)
+        base.SimpleAsn1Type.__init__(self, value, **kwargs)
 
     def __and__(self, value):
         return self.clone(self._value & value)
@@ -187,7 +189,7 @@ class Integer(base.AbstractSimpleAsn1Item):
         def __rdivmod__(self, value):
             return self.clone(divmod(value, self._value))
 
-        __hash__ = base.AbstractSimpleAsn1Item.__hash__
+        __hash__ = base.SimpleAsn1Type.__hash__
 
     def __int__(self):
         return int(self._value)
@@ -276,14 +278,16 @@ class Integer(base.AbstractSimpleAsn1Item):
 
 
 class Boolean(Integer):
-    """Create |ASN.1| type or object.
+    """Create |ASN.1| schema or value object.
 
-    |ASN.1| objects are immutable and duck-type Python :class:`int` objects.
+    |ASN.1| class is based on :class:`~pyasn1.type.base.SimpleAsn1Type`, its
+    objects are immutable and duck-type Python :class:`int` objects.
 
     Keyword Args
     ------------
     value: :class:`int`, :class:`str` or |ASN.1| object
-        Python integer or boolean or string literal or |ASN.1| class instance.
+        Python :class:`int` or :class:`str` literal or |ASN.1| class
+        instance. If `value` is not given, schema object will be created.
 
     tagSet: :py:class:`~pyasn1.type.tag.TagSet`
         Object representing non-default ASN.1 tag(s)
@@ -296,7 +300,7 @@ class Boolean(Integer):
 
     Raises
     ------
-    :py:class:`~pyasn1.error.PyAsn1Error`
+    ~pyasn1.error.ValueConstraintError, ~pyasn1.error.PyAsn1Error
         On constraint violation or bad initializer.
 
     Examples
@@ -355,17 +359,19 @@ class SizedInteger(SizedIntegerBase):
         return self.bitLength
 
 
-class BitString(base.AbstractSimpleAsn1Item):
+class BitString(base.SimpleAsn1Type):
     """Create |ASN.1| schema or value object.
 
-    |ASN.1| objects are immutable and duck-type both Python :class:`tuple` (as a tuple
+    |ASN.1| class is based on :class:`~pyasn1.type.base.SimpleAsn1Type`, its
+    objects are immutable and duck-type both Python :class:`tuple` (as a tuple
     of bits) and :class:`int` objects.
 
     Keyword Args
     ------------
     value: :class:`int`, :class:`str` or |ASN.1| object
-        Python integer or string literal representing binary or hexadecimal
-        number or sequence of integer bits or |ASN.1| object.
+        Python :class:`int` or :class:`str` literal representing binary
+        or hexadecimal number or sequence of integer bits or |ASN.1| object.
+        If `value` is not given, schema object will be created.
 
     tagSet: :py:class:`~pyasn1.type.tag.TagSet`
         Object representing non-default ASN.1 tag(s)
@@ -386,7 +392,7 @@ class BitString(base.AbstractSimpleAsn1Item):
 
     Raises
     ------
-    :py:class:`~pyasn1.error.PyAsn1Error`
+    ~pyasn1.error.ValueConstraintError, ~pyasn1.error.PyAsn1Error
         On constraint violation or bad initializer.
 
     Examples
@@ -432,7 +438,7 @@ class BitString(base.AbstractSimpleAsn1Item):
     namedValues = namedval.NamedValues()
 
     # Optimization for faster codec lookup
-    typeId = base.AbstractSimpleAsn1Item.getTypeId()
+    typeId = base.SimpleAsn1Type.getTypeId()
 
     defaultBinValue = defaultHexValue = noValue
 
@@ -461,7 +467,7 @@ class BitString(base.AbstractSimpleAsn1Item):
         if 'namedValues' not in kwargs:
             kwargs['namedValues'] = self.namedValues
 
-        base.AbstractSimpleAsn1Item.__init__(self, value, **kwargs)
+        base.SimpleAsn1Type.__init__(self, value, **kwargs)
 
     def __str__(self):
         return self.asBinary()
@@ -720,18 +726,22 @@ except NameError:  # Python 2.4
         return True
 
 
-class OctetString(base.AbstractSimpleAsn1Item):
+class OctetString(base.SimpleAsn1Type):
     """Create |ASN.1| schema or value object.
 
-    |ASN.1| objects are immutable and duck-type Python 2 :class:`str` or Python 3 :class:`bytes`.
-    When used in Unicode context, |ASN.1| type assumes "|encoding|" serialisation.
+    |ASN.1| class is based on :class:`~pyasn1.type.base.SimpleAsn1Type`, its
+    objects are immutable and duck-type Python 2 :class:`str` or
+    Python 3 :class:`bytes`. When used in Unicode context, |ASN.1| type
+    assumes "|encoding|" serialisation.
 
     Keyword Args
     ------------
-    value: :class:`str`, :class:`bytes` or |ASN.1| object
-        string (Python 2) or bytes (Python 3), alternatively unicode object
-        (Python 2) or string (Python 3) representing character string to be
-        serialised into octets (note `encoding` parameter) or |ASN.1| object.
+    value: :class:`unicode`, :class:`str`, :class:`bytes` or |ASN.1| object
+        class:`str` (Python 2) or :class:`bytes` (Python 3), alternatively
+        class:`unicode` object (Python 2) or :class:`str` (Python 3)
+        representing character string to be serialised into octets
+        (note `encoding` parameter) or |ASN.1| object.
+        If `value` is not given, schema object will be created.
 
     tagSet: :py:class:`~pyasn1.type.tag.TagSet`
         Object representing non-default ASN.1 tag(s)
@@ -754,7 +764,7 @@ class OctetString(base.AbstractSimpleAsn1Item):
 
     Raises
     ------
-    :py:class:`~pyasn1.error.PyAsn1Error`
+    ~pyasn1.error.ValueConstraintError, ~pyasn1.error.PyAsn1Error
         On constraint violation or bad initializer.
 
     Examples
@@ -786,7 +796,7 @@ class OctetString(base.AbstractSimpleAsn1Item):
     subtypeSpec = constraint.ConstraintsIntersection()
 
     # Optimization for faster codec lookup
-    typeId = base.AbstractSimpleAsn1Item.getTypeId()
+    typeId = base.SimpleAsn1Type.getTypeId()
 
     defaultBinValue = defaultHexValue = noValue
     encoding = 'iso-8859-1'
@@ -816,26 +826,33 @@ class OctetString(base.AbstractSimpleAsn1Item):
         if 'encoding' not in kwargs:
             kwargs['encoding'] = self.encoding
 
-        base.AbstractSimpleAsn1Item.__init__(self, value, **kwargs)
+        base.SimpleAsn1Type.__init__(self, value, **kwargs)
 
     if sys.version_info[0] <= 2:
         def prettyIn(self, value):
             if isinstance(value, str):
                 return value
+
             elif isinstance(value, unicode):
                 try:
                     return value.encode(self.encoding)
+
                 except (LookupError, UnicodeEncodeError):
-                    raise error.PyAsn1Error(
-                        "Can't encode string '%s' with codec %s" % (value, self.encoding)
+                    exc = sys.exc_info()[1]
+                    raise error.PyAsn1UnicodeEncodeError(
+                        "Can't encode string '%s' with codec "
+                        "%s" % (value, self.encoding), exc
                     )
+
             elif isinstance(value, (tuple, list)):
                 try:
                     return ''.join([chr(x) for x in value])
+
                 except ValueError:
                     raise error.PyAsn1Error(
                         "Bad %s initializer '%s'" % (self.__class__.__name__, value)
                     )
+
             else:
                 return str(value)
 
@@ -847,8 +864,10 @@ class OctetString(base.AbstractSimpleAsn1Item):
                 return self._value.decode(self.encoding)
 
             except UnicodeDecodeError:
-                raise error.PyAsn1Error(
-                    "Can't decode string '%s' with codec %s" % (self._value, self.encoding)
+                exc = sys.exc_info()[1]
+                raise error.PyAsn1UnicodeDecodeError(
+                    "Can't decode string '%s' with codec "
+                    "%s" % (self._value, self.encoding), exc
                 )
 
         def asOctets(self):
@@ -861,19 +880,26 @@ class OctetString(base.AbstractSimpleAsn1Item):
         def prettyIn(self, value):
             if isinstance(value, bytes):
                 return value
+
             elif isinstance(value, str):
                 try:
                     return value.encode(self.encoding)
+
                 except UnicodeEncodeError:
-                    raise error.PyAsn1Error(
-                        "Can't encode string '%s' with '%s' codec" % (value, self.encoding)
+                    exc = sys.exc_info()[1]
+                    raise error.PyAsn1UnicodeEncodeError(
+                        "Can't encode string '%s' with '%s' "
+                        "codec" % (value, self.encoding), exc
                     )
             elif isinstance(value, OctetString):  # a shortcut, bytes() would work the same way
                 return value.asOctets()
-            elif isinstance(value, base.AbstractSimpleAsn1Item):  # this mostly targets Integer objects
+
+            elif isinstance(value, base.SimpleAsn1Type):  # this mostly targets Integer objects
                 return self.prettyIn(str(value))
+
             elif isinstance(value, (tuple, list)):
                 return self.prettyIn(bytes(value))
+
             else:
                 return bytes(value)
 
@@ -882,8 +908,11 @@ class OctetString(base.AbstractSimpleAsn1Item):
                 return self._value.decode(self.encoding)
 
             except UnicodeDecodeError:
-                raise error.PyAsn1Error(
-                    "Can't decode string '%s' with '%s' codec at '%s'" % (self._value, self.encoding, self.__class__.__name__)
+                exc = sys.exc_info()[1]
+                raise error.PyAsn1UnicodeDecodeError(
+                    "Can't decode string '%s' with '%s' codec at "
+                    "'%s'" % (self._value, self.encoding,
+                              self.__class__.__name__), exc
                 )
 
         def __bytes__(self):
@@ -1028,19 +1057,22 @@ class OctetString(base.AbstractSimpleAsn1Item):
 class Null(OctetString):
     """Create |ASN.1| schema or value object.
 
-    |ASN.1| objects are immutable and duck-type Python :class:`str` objects (always empty).
+    |ASN.1| class is based on :class:`~pyasn1.type.base.SimpleAsn1Type`, its
+    objects are immutable and duck-type Python :class:`str` objects
+    (always empty).
 
     Keyword Args
     ------------
-    value: :class:`str` or :py:class:`~pyasn1.type.univ.Null` object
-        Python empty string literal or any object that evaluates to `False`
+    value: :class:`str` or |ASN.1| object
+        Python empty :class:`str` literal or any object that evaluates to :obj:`False`
+        If `value` is not given, schema object will be created.
 
     tagSet: :py:class:`~pyasn1.type.tag.TagSet`
         Object representing non-default ASN.1 tag(s)
 
     Raises
     ------
-    :py:class:`~pyasn1.error.PyAsn1Error`
+    ~pyasn1.error.ValueConstraintError, ~pyasn1.error.PyAsn1Error
         On constraint violation or bad initializer.
 
     Examples
@@ -1081,15 +1113,18 @@ else:
 numericTypes = intTypes + (float,)
 
 
-class ObjectIdentifier(base.AbstractSimpleAsn1Item):
+class ObjectIdentifier(base.SimpleAsn1Type):
     """Create |ASN.1| schema or value object.
 
-    |ASN.1| objects are immutable and duck-type Python :class:`tuple` objects (tuple of non-negative integers).
+    |ASN.1| class is based on :class:`~pyasn1.type.base.SimpleAsn1Type`, its
+    objects are immutable and duck-type Python :class:`tuple` objects
+    (tuple of non-negative integers).
 
     Keyword Args
     ------------
     value: :class:`tuple`, :class:`str` or |ASN.1| object
-        Python sequence of :class:`int` or string literal or |ASN.1| object.
+        Python sequence of :class:`int` or :class:`str` literal or |ASN.1| object.
+        If `value` is not given, schema object will be created.
 
     tagSet: :py:class:`~pyasn1.type.tag.TagSet`
         Object representing non-default ASN.1 tag(s)
@@ -1099,7 +1134,7 @@ class ObjectIdentifier(base.AbstractSimpleAsn1Item):
 
     Raises
     ------
-    :py:class:`~pyasn1.error.PyAsn1Error`
+    ~pyasn1.error.ValueConstraintError, ~pyasn1.error.PyAsn1Error
         On constraint violation or bad initializer.
 
     Examples
@@ -1131,7 +1166,7 @@ class ObjectIdentifier(base.AbstractSimpleAsn1Item):
     subtypeSpec = constraint.ConstraintsIntersection()
 
     # Optimization for faster codec lookup
-    typeId = base.AbstractSimpleAsn1Item.getTypeId()
+    typeId = base.SimpleAsn1Type.getTypeId()
 
     def __add__(self, other):
         return self.clone(self._value + other)
@@ -1173,8 +1208,8 @@ class ObjectIdentifier(base.AbstractSimpleAsn1Item):
         Returns
         -------
         : :class:`bool`
-            :class:`True` if this |ASN.1| object is a parent (e.g. prefix) of the other |ASN.1| object
-            or :class:`False` otherwise.
+            :obj:`True` if this |ASN.1| object is a parent (e.g. prefix) of the other |ASN.1| object
+            or :obj:`False` otherwise.
         """
         l = len(self)
         if l <= len(other):
@@ -1214,10 +1249,11 @@ class ObjectIdentifier(base.AbstractSimpleAsn1Item):
         return '.'.join([str(x) for x in value])
 
 
-class Real(base.AbstractSimpleAsn1Item):
+class Real(base.SimpleAsn1Type):
     """Create |ASN.1| schema or value object.
 
-    |ASN.1| objects are immutable and duck-type Python :class:`float` objects.
+    |ASN.1| class is based on :class:`~pyasn1.type.base.SimpleAsn1Type`, its
+    objects are immutable and duck-type Python :class:`float` objects.
     Additionally, |ASN.1| objects behave like a :class:`tuple` in which case its
     elements are mantissa, base and exponent.
 
@@ -1225,7 +1261,8 @@ class Real(base.AbstractSimpleAsn1Item):
     ------------
     value: :class:`tuple`, :class:`float` or |ASN.1| object
         Python sequence of :class:`int` (representing mantissa, base and
-        exponent) or float instance or *Real* class instance.
+        exponent) or :class:`float` instance or |ASN.1| object.
+        If `value` is not given, schema object will be created.
 
     tagSet: :py:class:`~pyasn1.type.tag.TagSet`
         Object representing non-default ASN.1 tag(s)
@@ -1235,7 +1272,7 @@ class Real(base.AbstractSimpleAsn1Item):
 
     Raises
     ------
-    :py:class:`~pyasn1.error.PyAsn1Error`
+    ~pyasn1.error.ValueConstraintError, ~pyasn1.error.PyAsn1Error
         On constraint violation or bad initializer.
 
     Examples
@@ -1278,7 +1315,7 @@ class Real(base.AbstractSimpleAsn1Item):
     subtypeSpec = constraint.ConstraintsIntersection()
 
     # Optimization for faster codec lookup
-    typeId = base.AbstractSimpleAsn1Item.getTypeId()
+    typeId = base.SimpleAsn1Type.getTypeId()
 
     @staticmethod
     def __normalizeBase10(value):
@@ -1342,8 +1379,8 @@ class Real(base.AbstractSimpleAsn1Item):
         Returns
         -------
         : :class:`bool`
-            :class:`True` if calling object represents plus infinity
-            or :class:`False` otherwise.
+            :obj:`True` if calling object represents plus infinity
+            or :obj:`False` otherwise.
 
         """
         return self._value == self._plusInf
@@ -1355,8 +1392,8 @@ class Real(base.AbstractSimpleAsn1Item):
         Returns
         -------
         : :class:`bool`
-            :class:`True` if calling object represents minus infinity
-            or :class:`False` otherwise.
+            :obj:`True` if calling object represents minus infinity
+            or :obj:`False` otherwise.
         """
         return self._value == self._minusInf
 
@@ -1479,7 +1516,7 @@ class Real(base.AbstractSimpleAsn1Item):
         def __bool__(self):
             return bool(float(self))
 
-        __hash__ = base.AbstractSimpleAsn1Item.__hash__
+        __hash__ = base.SimpleAsn1Type.__hash__
 
     def __getitem__(self, idx):
         if self._value in self._inf:
@@ -1500,14 +1537,16 @@ class Real(base.AbstractSimpleAsn1Item):
 
 
 class Enumerated(Integer):
-    """Create |ASN.1| type or object.
+    """Create |ASN.1| schema or value object.
 
-    |ASN.1| objects are immutable and duck-type Python :class:`int` objects.
+    |ASN.1| class is based on :class:`~pyasn1.type.base.SimpleAsn1Type`, its
+    objects are immutable and duck-type Python :class:`int` objects.
 
     Keyword Args
     ------------
     value: :class:`int`, :class:`str` or |ASN.1| object
-        Python integer or string literal or |ASN.1| class instance.
+        Python :class:`int` or :class:`str` literal or |ASN.1| object.
+        If `value` is not given, schema object will be created.
 
     tagSet: :py:class:`~pyasn1.type.tag.TagSet`
         Object representing non-default ASN.1 tag(s)
@@ -1520,7 +1559,7 @@ class Enumerated(Integer):
 
     Raises
     ------
-    :py:class:`~pyasn1.error.PyAsn1Error`
+    ~pyasn1.error.ValueConstraintError, ~pyasn1.error.PyAsn1Error
         On constraint violation or bad initializer.
 
     Examples
@@ -1566,10 +1605,11 @@ class Enumerated(Integer):
 
 # "Structured" ASN.1 types
 
-class SequenceOfAndSetOfBase(base.AbstractConstructedAsn1Item):
-    """Create |ASN.1| type.
+class SequenceOfAndSetOfBase(base.ConstructedAsn1Type):
+    """Create |ASN.1| schema or value object.
 
-    |ASN.1| objects are mutable and duck-type Python :class:`list` objects.
+    |ASN.1| class is based on :class:`~pyasn1.type.base.ConstructedAsn1Type`,
+    its objects are mutable and duck-type Python :class:`list` objects.
 
     Keyword Args
     ------------
@@ -1610,7 +1650,9 @@ class SequenceOfAndSetOfBase(base.AbstractConstructedAsn1Item):
                     raise error.PyAsn1Error('Conflicting positional and keyword params!')
                 kwargs['componentType'] = value
 
-        base.AbstractConstructedAsn1Item.__init__(self, **kwargs)
+        self._componentValues = noValue
+
+        base.ConstructedAsn1Type.__init__(self, **kwargs)
 
     # Python list protocol
 
@@ -1628,24 +1670,36 @@ class SequenceOfAndSetOfBase(base.AbstractConstructedAsn1Item):
         except error.PyAsn1Error:
             raise IndexError(sys.exc_info()[1])
 
-    def clear(self):
-        self._componentValues = []
-
     def append(self, value):
-        self[len(self)] = value
+        if self._componentValues is noValue:
+            pos = 0
+
+        else:
+            pos = len(self._componentValues)
+
+        self[pos] = value
 
     def count(self, value):
-        return self._componentValues.count(value)
+        return list(self._componentValues.values()).count(value)
 
     def extend(self, values):
         for value in values:
             self.append(value)
 
+        if self._componentValues is noValue:
+            self._componentValues = {}
+
     def index(self, value, start=0, stop=None):
         if stop is None:
             stop = len(self)
+
+        indices, values = zip(*self._componentValues.items())
+
+        # TODO: remove when Py2.5 support is gone
+        values = list(values)
+
         try:
-            return self._componentValues.index(value, start, stop)
+            return indices[values.index(value, start, stop)]
 
         except error.PyAsn1Error:
             raise ValueError(sys.exc_info()[1])
@@ -1654,15 +1708,24 @@ class SequenceOfAndSetOfBase(base.AbstractConstructedAsn1Item):
         self._componentValues.reverse()
 
     def sort(self, key=None, reverse=False):
-        self._componentValues.sort(key=key, reverse=reverse)
+        self._componentValues = dict(
+            enumerate(sorted(self._componentValues.values(),
+                             key=key, reverse=reverse)))
+
+    def __len__(self):
+        if self._componentValues is noValue or not self._componentValues:
+            return 0
+
+        return max(self._componentValues) + 1
 
     def __iter__(self):
-        return iter(self._componentValues)
+        for idx in range(0, len(self)):
+            yield self.getComponentByPosition(idx)
 
     def _cloneComponentValues(self, myClone, cloneValueFlag):
-        for idx, componentValue in enumerate(self._componentValues):
+        for idx, componentValue in self._componentValues.items():
             if componentValue is not noValue:
-                if isinstance(componentValue, base.AbstractConstructedAsn1Item):
+                if isinstance(componentValue, base.ConstructedAsn1Type):
                     myClone.setComponentByPosition(
                         idx, componentValue.clone(cloneValueFlag=cloneValueFlag)
                     )
@@ -1689,8 +1752,8 @@ class SequenceOfAndSetOfBase(base.AbstractConstructedAsn1Item):
             object instead of the requested component.
 
         instantiate: :class:`bool`
-            If `True` (default), inner component will be automatically instantiated.
-            If 'False' either existing component or the `noValue` object will be
+            If :obj:`True` (default), inner component will be automatically instantiated.
+            If :obj:`False` either existing component or the :class:`NoValue` object will be
             returned.
 
         Returns
@@ -1735,10 +1798,21 @@ class SequenceOfAndSetOfBase(base.AbstractConstructedAsn1Item):
             # returns noValue
             s.getComponentByPosition(0, instantiate=False)
         """
+        if isinstance(idx, slice):
+            indices = tuple(range(len(self)))
+            return [self.getComponentByPosition(subidx, default, instantiate)
+                    for subidx in indices[idx]]
+
+        if idx < 0:
+            idx = len(self) + idx
+            if idx < 0:
+                raise error.PyAsn1Error(
+                    'SequenceOf/SetOf index is out of range')
+
         try:
             componentValue = self._componentValues[idx]
 
-        except IndexError:
+        except (KeyError, error.PyAsn1Error):
             if not instantiate:
                 return default
 
@@ -1773,15 +1847,16 @@ class SequenceOfAndSetOfBase(base.AbstractConstructedAsn1Item):
         value: :class:`object` or :py:class:`~pyasn1.type.base.PyAsn1Item` derivative
             A Python value to initialize |ASN.1| component with (if *componentType* is set)
             or ASN.1 value object to assign to |ASN.1| component.
+            If `value` is not given, schema object will be set as a component.
 
         verifyConstraints: :class:`bool`
-             If `False`, skip constraints validation
+             If :obj:`False`, skip constraints validation
 
         matchTags: :class:`bool`
-             If `False`, skip component tags matching
+             If :obj:`False`, skip component tags matching
 
         matchConstraints: :class:`bool`
-             If `False`, skip component constraints matching
+             If :obj:`False`, skip component constraints matching
 
         Returns
         -------
@@ -1789,38 +1864,77 @@ class SequenceOfAndSetOfBase(base.AbstractConstructedAsn1Item):
 
         Raises
         ------
-        IndexError:
+        ~pyasn1.error.ValueConstraintError, ~pyasn1.error.PyAsn1Error
+            On constraint violation or bad initializer
+        IndexError
             When idx > len(self)
         """
+        if isinstance(idx, slice):
+            indices = tuple(range(len(self)))
+            startIdx = indices and indices[idx][0] or 0
+            for subIdx, subValue in enumerate(value):
+                self.setComponentByPosition(
+                    startIdx + subIdx, subValue, verifyConstraints,
+                    matchTags, matchConstraints)
+            return self
+
+        if idx < 0:
+            idx = len(self) + idx
+            if idx < 0:
+                raise error.PyAsn1Error(
+                    'SequenceOf/SetOf index is out of range')
+
         componentType = self.componentType
 
-        try:
-            currentValue = self._componentValues[idx]
-        except IndexError:
-            currentValue = noValue
+        if self._componentValues is noValue:
+            componentValues = {}
 
-            if len(self._componentValues) < idx:
-                raise error.PyAsn1Error('Component index out of range')
+        else:
+            componentValues = self._componentValues
+
+        currentValue = componentValues.get(idx, noValue)
 
         if value is noValue:
             if componentType is not None:
                 value = componentType.clone()
+
             elif currentValue is noValue:
                 raise error.PyAsn1Error('Component type not defined')
+
         elif not isinstance(value, base.Asn1Item):
-            if componentType is not None and isinstance(componentType, base.AbstractSimpleAsn1Item):
+            if (componentType is not None and
+                    isinstance(componentType, base.SimpleAsn1Type)):
                 value = componentType.clone(value=value)
-            elif currentValue is not noValue and isinstance(currentValue, base.AbstractSimpleAsn1Item):
+
+            elif (currentValue is not noValue and
+                    isinstance(currentValue, base.SimpleAsn1Type)):
                 value = currentValue.clone(value=value)
+
             else:
-                raise error.PyAsn1Error('Non-ASN.1 value %r and undefined component type at %r' % (value, self))
-        elif componentType is not None:
-            if self.strictConstraints:
-                if not componentType.isSameTypeWith(value, matchTags, matchConstraints):
-                    raise error.PyAsn1Error('Component value is tag-incompatible: %r vs %r' % (value, componentType))
+                raise error.PyAsn1Error(
+                    'Non-ASN.1 value %r and undefined component'
+                    ' type at %r' % (value, self))
+
+        elif componentType is not None and (matchTags or matchConstraints):
+            subtypeChecker = (
+                    self.strictConstraints and
+                    componentType.isSameTypeWith or
+                    componentType.isSuperTypeOf)
+
+            if not subtypeChecker(value, matchTags, matchConstraints):
+                # TODO: we should wrap componentType with UnnamedType to carry
+                # additional properties associated with componentType
+                if componentType.typeId != Any.typeId:
+                    raise error.PyAsn1Error(
+                        'Component value is tag-incompatible: %r vs '
+                        '%r' % (value, componentType))
+
             else:
-                if not componentType.isSuperTypeOf(value, matchTags, matchConstraints):
-                    raise error.PyAsn1Error('Component value is tag-incompatible: %r vs %r' % (value, componentType))
+                if not componentType.isSuperTypeOf(
+                        value, matchTags, matchConstraints):
+                    raise error.PyAsn1Error(
+                        'Component value is tag-incompatible: '
+                        '%r vs %r' % (value, componentType))
 
         if verifyConstraints and value.isValue:
             try:
@@ -1830,10 +1944,9 @@ class SequenceOfAndSetOfBase(base.AbstractConstructedAsn1Item):
                 exType, exValue, exTb = sys.exc_info()
                 raise exType('%s at %s' % (exValue, self.__class__.__name__))
 
-        if currentValue is noValue:
-            self._componentValues.append(value)
-        else:
-            self._componentValues[idx] = value
+        componentValues[idx] = value
+
+        self._componentValues = componentValues
 
         return self
 
@@ -1842,16 +1955,44 @@ class SequenceOfAndSetOfBase(base.AbstractConstructedAsn1Item):
         if self.componentType is not None:
             return self.componentType.tagMap
 
+    @property
+    def components(self):
+        return [self._componentValues[idx]
+                for idx in sorted(self._componentValues)]
+
+    def clear(self):
+        """Remove all components and become an empty |ASN.1| value object.
+
+        Has the same effect on |ASN.1| object as it does on :class:`list`
+        built-in.
+        """
+        self._componentValues = {}
+        return self
+
+    def reset(self):
+        """Remove all components and become a |ASN.1| schema object.
+
+        See :meth:`isValue` property for more information on the
+        distinction between value and schema objects.
+        """
+        self._componentValues = noValue
+        return self
+
     def prettyPrint(self, scope=0):
         scope += 1
         representation = self.__class__.__name__ + ':\n'
-        for idx, componentValue in enumerate(self._componentValues):
+
+        if not self.isValue:
+            return representation
+
+        for idx, componentValue in enumerate(self):
             representation += ' ' * scope
             if (componentValue is noValue and
                     self.componentType is not None):
                 representation += '<empty>'
             else:
                 representation += componentValue.prettyPrint(scope)
+
         return representation
 
     def prettyPrintType(self, scope=0):
@@ -1867,17 +2008,17 @@ class SequenceOfAndSetOfBase(base.AbstractConstructedAsn1Item):
     def isValue(self):
         """Indicate that |ASN.1| object represents ASN.1 value.
 
-        If *isValue* is `False` then this object represents just ASN.1 schema.
+        If *isValue* is :obj:`False` then this object represents just ASN.1 schema.
 
-        If *isValue* is `True` then, in addition to its ASN.1 schema features,
-        this object can also be used like a Python built-in object (e.g. `int`,
-        `str`, `dict` etc.).
+        If *isValue* is :obj:`True` then, in addition to its ASN.1 schema features,
+        this object can also be used like a Python built-in object
+        (e.g. :class:`int`, :class:`str`, :class:`dict` etc.).
 
         Returns
         -------
         : :class:`bool`
-            :class:`False` if object represents just ASN.1 schema.
-            :class:`True` if object represents ASN.1 schema and can be used as a normal value.
+            :obj:`False` if object represents just ASN.1 schema.
+            :obj:`True` if object represents ASN.1 schema and can be used as a normal value.
 
         Note
         ----
@@ -1890,7 +2031,13 @@ class SequenceOfAndSetOfBase(base.AbstractConstructedAsn1Item):
         The PyASN1 value objects can **additionally** participate in many operations
         involving regular Python objects (e.g. arithmetic, comprehension etc).
         """
-        for componentValue in self._componentValues:
+        if self._componentValues is noValue:
+            return False
+
+        if len(self._componentValues) != len(self):
+            return False
+
+        for componentValue in self._componentValues.values():
             if componentValue is noValue or not componentValue.isValue:
                 return False
 
@@ -1951,10 +2098,11 @@ class SetOf(SequenceOfAndSetOfBase):
     typeId = SequenceOfAndSetOfBase.getTypeId()
 
 
-class SequenceAndSetBase(base.AbstractConstructedAsn1Item):
-    """Create |ASN.1| type.
+class SequenceAndSetBase(base.ConstructedAsn1Type):
+    """Create |ASN.1| schema or value object.
 
-    |ASN.1| objects are mutable and duck-type Python :class:`dict` objects.
+    |ASN.1| class is based on :class:`~pyasn1.type.base.ConstructedAsn1Type`,
+    its objects are mutable and duck-type Python :class:`dict` objects.
 
     Keyword Args
     ------------
@@ -2042,8 +2190,12 @@ class SequenceAndSetBase(base.AbstractConstructedAsn1Item):
 
 
     def __init__(self, **kwargs):
-        base.AbstractConstructedAsn1Item.__init__(self, **kwargs)
+        base.ConstructedAsn1Type.__init__(self, **kwargs)
         self._componentTypeLen = len(self.componentType)
+        if self._componentTypeLen:
+            self._componentValues = []
+        else:
+            self._componentValues = noValue
         self._dynamicNames = self._componentTypeLen or self.DynamicNames()
 
     def __getitem__(self, idx):
@@ -2086,6 +2238,9 @@ class SequenceAndSetBase(base.AbstractConstructedAsn1Item):
         else:
             return key in self._dynamicNames
 
+    def __len__(self):
+        return len(self._componentValues)
+
     def __iter__(self):
         return iter(self.componentType or self._dynamicNames)
 
@@ -2112,13 +2267,36 @@ class SequenceAndSetBase(base.AbstractConstructedAsn1Item):
             self[k] = mappingValue[k]
 
     def clear(self):
+        """Remove all components and become an empty |ASN.1| value object.
+
+        Has the same effect on |ASN.1| object as it does on :class:`dict`
+        built-in.
+        """
         self._componentValues = []
         self._dynamicNames = self.DynamicNames()
+        return self
+
+    def reset(self):
+        """Remove all components and become a |ASN.1| schema object.
+
+        See :meth:`isValue` property for more information on the
+        distinction between value and schema objects.
+        """
+        self._componentValues = noValue
+        self._dynamicNames = self.DynamicNames()
+        return self
+
+    @property
+    def components(self):
+        return self._componentValues
 
     def _cloneComponentValues(self, myClone, cloneValueFlag):
+        if self._componentValues is noValue:
+            return
+
         for idx, componentValue in enumerate(self._componentValues):
             if componentValue is not noValue:
-                if isinstance(componentValue, base.AbstractConstructedAsn1Item):
+                if isinstance(componentValue, base.ConstructedAsn1Type):
                     myClone.setComponentByPosition(
                         idx, componentValue.clone(cloneValueFlag=cloneValueFlag)
                     )
@@ -2142,14 +2320,16 @@ class SequenceAndSetBase(base.AbstractConstructedAsn1Item):
             object instead of the requested component.
 
         instantiate: :class:`bool`
-            If `True` (default), inner component will be automatically instantiated.
-            If 'False' either existing component or the `noValue` object will be
-            returned.
+            If :obj:`True` (default), inner component will be automatically
+            instantiated.
+            If :obj:`False` either existing component or the :class:`NoValue`
+            object will be returned.
 
         Returns
         -------
         : :py:class:`~pyasn1.type.base.PyAsn1Item`
-            Instantiate |ASN.1| component type or return existing component value
+            Instantiate |ASN.1| component type or return existing
+            component value
         """
         if self._componentTypeLen:
             idx = self.componentType.getPositionByName(name)
@@ -2180,15 +2360,16 @@ class SequenceAndSetBase(base.AbstractConstructedAsn1Item):
         value: :class:`object` or :py:class:`~pyasn1.type.base.PyAsn1Item` derivative
             A Python value to initialize |ASN.1| component with (if *componentType* is set)
             or ASN.1 value object to assign to |ASN.1| component.
+            If `value` is not given, schema object will be set as a component.
 
         verifyConstraints: :class:`bool`
-             If `False`, skip constraints validation
+             If :obj:`False`, skip constraints validation
 
         matchTags: :class:`bool`
-             If `False`, skip component tags matching
+             If :obj:`False`, skip component tags matching
 
         matchConstraints: :class:`bool`
-             If `False`, skip component constraints matching
+             If :obj:`False`, skip component constraints matching
 
         Returns
         -------
@@ -2226,9 +2407,10 @@ class SequenceAndSetBase(base.AbstractConstructedAsn1Item):
             object instead of the requested component.
 
         instantiate: :class:`bool`
-            If `True` (default), inner component will be automatically instantiated.
-            If 'False' either existing component or the `noValue` object will be
-            returned.
+            If :obj:`True` (default), inner component will be automatically
+            instantiated.
+            If :obj:`False` either existing component or the :class:`NoValue`
+            object will be returned.
 
         Returns
         -------
@@ -2275,7 +2457,11 @@ class SequenceAndSetBase(base.AbstractConstructedAsn1Item):
             s.getComponentByPosition(0, instantiate=False)
         """
         try:
-            componentValue = self._componentValues[idx]
+            if self._componentValues is noValue:
+                componentValue = noValue
+
+            else:
+                componentValue = self._componentValues[idx]
 
         except IndexError:
             componentValue = noValue
@@ -2317,15 +2503,16 @@ class SequenceAndSetBase(base.AbstractConstructedAsn1Item):
         value: :class:`object` or :py:class:`~pyasn1.type.base.PyAsn1Item` derivative
             A Python value to initialize |ASN.1| component with (if *componentType* is set)
             or ASN.1 value object to assign to |ASN.1| component.
+            If `value` is not given, schema object will be set as a component.
 
         verifyConstraints : :class:`bool`
-             If `False`, skip constraints validation
+             If :obj:`False`, skip constraints validation
 
         matchTags: :class:`bool`
-             If `False`, skip component tags matching
+             If :obj:`False`, skip component tags matching
 
         matchConstraints: :class:`bool`
-             If `False`, skip component constraints matching
+             If :obj:`False`, skip component constraints matching
 
         Returns
         -------
@@ -2334,8 +2521,14 @@ class SequenceAndSetBase(base.AbstractConstructedAsn1Item):
         componentType = self.componentType
         componentTypeLen = self._componentTypeLen
 
+        if self._componentValues is noValue:
+            componentValues = []
+
+        else:
+            componentValues = self._componentValues
+
         try:
-            currentValue = self._componentValues[idx]
+            currentValue = componentValues[idx]
 
         except IndexError:
             currentValue = noValue
@@ -2343,12 +2536,12 @@ class SequenceAndSetBase(base.AbstractConstructedAsn1Item):
                 if componentTypeLen < idx:
                     raise error.PyAsn1Error('component index out of range')
 
-                self._componentValues = [noValue] * componentTypeLen
+                componentValues = [noValue] * componentTypeLen
 
         if value is noValue:
             if componentTypeLen:
                 value = componentType.getTypeByPosition(idx)
-                if isinstance(value, base.AbstractConstructedAsn1Item):
+                if isinstance(value, base.ConstructedAsn1Type):
                     value = value.clone(cloneValueFlag=componentType[idx].isDefaulted)
 
             elif currentValue is noValue:
@@ -2357,13 +2550,13 @@ class SequenceAndSetBase(base.AbstractConstructedAsn1Item):
         elif not isinstance(value, base.Asn1Item):
             if componentTypeLen:
                 subComponentType = componentType.getTypeByPosition(idx)
-                if isinstance(subComponentType, base.AbstractSimpleAsn1Item):
+                if isinstance(subComponentType, base.SimpleAsn1Type):
                     value = subComponentType.clone(value=value)
 
                 else:
                     raise error.PyAsn1Error('%s can cast only scalar values' % componentType.__class__.__name__)
 
-            elif currentValue is not noValue and isinstance(currentValue, base.AbstractSimpleAsn1Item):
+            elif currentValue is not noValue and isinstance(currentValue, base.SimpleAsn1Type):
                 value = currentValue.clone(value=value)
 
             else:
@@ -2389,14 +2582,16 @@ class SequenceAndSetBase(base.AbstractConstructedAsn1Item):
                 raise exType('%s at %s' % (exValue, self.__class__.__name__))
 
         if componentTypeLen or idx in self._dynamicNames:
-            self._componentValues[idx] = value
+            componentValues[idx] = value
 
-        elif len(self._componentValues) == idx:
-            self._componentValues.append(value)
+        elif len(componentValues) == idx:
+            componentValues.append(value)
             self._dynamicNames.addField(idx)
 
         else:
             raise error.PyAsn1Error('Component index out of range')
+
+        self._componentValues = componentValues
 
         return self
 
@@ -2404,17 +2599,18 @@ class SequenceAndSetBase(base.AbstractConstructedAsn1Item):
     def isValue(self):
         """Indicate that |ASN.1| object represents ASN.1 value.
 
-        If *isValue* is `False` then this object represents just ASN.1 schema.
+        If *isValue* is :obj:`False` then this object represents just ASN.1 schema.
 
-        If *isValue* is `True` then, in addition to its ASN.1 schema features,
-        this object can also be used like a Python built-in object (e.g. `int`,
-        `str`, `dict` etc.).
+        If *isValue* is :obj:`True` then, in addition to its ASN.1 schema features,
+        this object can also be used like a Python built-in object (e.g.
+        :class:`int`, :class:`str`, :class:`dict` etc.).
 
         Returns
         -------
         : :class:`bool`
-            :class:`False` if object represents just ASN.1 schema.
-            :class:`True` if object represents ASN.1 schema and can be used as a normal value.
+            :obj:`False` if object represents just ASN.1 schema.
+            :obj:`True` if object represents ASN.1 schema and can be used as a
+            normal value.
 
         Note
         ----
@@ -2426,7 +2622,16 @@ class SequenceAndSetBase(base.AbstractConstructedAsn1Item):
 
         The PyASN1 value objects can **additionally** participate in many operations
         involving regular Python objects (e.g. arithmetic, comprehension etc).
+
+        It is sufficient for |ASN.1| objects to have all non-optional and non-defaulted
+        components being value objects to be considered as a value objects as a whole.
+        In other words, even having one or more optional components not turned into
+        value objects, |ASN.1| object is still considered as a value object. Defaulted
+        components are normally value objects by default.
         """
+        if self._componentValues is noValue:
+            return False
+
         componentType = self.componentType
 
         if componentType:
@@ -2496,7 +2701,6 @@ class SequenceAndSetBase(base.AbstractConstructedAsn1Item):
     def getNameByPosition(self, idx):
         if self._componentTypeLen:
             return self.componentType[idx].name
-
 
 class Sequence(SequenceAndSetBase):
     __doc__ = SequenceAndSetBase.__doc__
@@ -2583,9 +2787,10 @@ class Set(SequenceAndSetBase):
             object instead of the requested component.
 
         instantiate: :class:`bool`
-            If `True` (default), inner component will be automatically instantiated.
-            If 'False' either existing component or the `noValue` object will be
-            returned.
+            If :obj:`True` (default), inner component will be automatically
+            instantiated.
+            If :obj:`False` either existing component or the :class:`noValue`
+            object will be returned.
 
         Returns
         -------
@@ -2621,18 +2826,19 @@ class Set(SequenceAndSetBase):
         value: :class:`object` or :py:class:`~pyasn1.type.base.PyAsn1Item` derivative
             A Python value to initialize |ASN.1| component with (if *componentType* is set)
             or ASN.1 value object to assign to |ASN.1| component.
+            If `value` is not given, schema object will be set as a component.
 
         verifyConstraints : :class:`bool`
-            If `False`, skip constraints validation
+            If :obj:`False`, skip constraints validation
 
         matchTags: :class:`bool`
-            If `False`, skip component tags matching
+            If :obj:`False`, skip component tags matching
 
         matchConstraints: :class:`bool`
-            If `False`, skip component constraints matching
+            If :obj:`False`, skip component constraints matching
 
         innerFlag: :class:`bool`
-            If `True`, search for matching *tagSet* recursively.
+            If :obj:`True`, search for matching *tagSet* recursively.
 
         Returns
         -------
@@ -2664,9 +2870,10 @@ class Set(SequenceAndSetBase):
 
 
 class Choice(Set):
-    """Create |ASN.1| type.
+    """Create |ASN.1| schema or value object.
 
-    |ASN.1| objects are mutable and duck-type Python :class:`dict` objects.
+    |ASN.1| class is based on :class:`~pyasn1.type.base.ConstructedAsn1Type`,
+    its objects are mutable and duck-type Python :class:`list` objects.
 
     Keyword Args
     ------------
@@ -2811,7 +3018,7 @@ class Choice(Set):
                 tagSet = component.effectiveTagSet
             else:
                 tagSet = component.tagSet
-            if isinstance(component, base.AbstractConstructedAsn1Item):
+            if isinstance(component, base.ConstructedAsn1Type):
                 myClone.setComponentByType(
                     tagSet, component.clone(cloneValueFlag=cloneValueFlag)
                 )
@@ -2849,15 +3056,16 @@ class Choice(Set):
             A Python value to initialize |ASN.1| component with (if *componentType* is set)
             or ASN.1 value object to assign to |ASN.1| component. Once a new value is
             set to *idx* component, previous value is dropped.
+            If `value` is not given, schema object will be set as a component.
 
         verifyConstraints : :class:`bool`
-            If `False`, skip constraints validation
+            If :obj:`False`, skip constraints validation
 
         matchTags: :class:`bool`
-            If `False`, skip component tags matching
+            If :obj:`False`, skip component tags matching
 
         matchConstraints: :class:`bool`
-            If `False`, skip component constraints matching
+            If :obj:`False`, skip component constraints matching
 
         Returns
         -------
@@ -2927,17 +3135,18 @@ class Choice(Set):
     def isValue(self):
         """Indicate that |ASN.1| object represents ASN.1 value.
 
-        If *isValue* is `False` then this object represents just ASN.1 schema.
+        If *isValue* is :obj:`False` then this object represents just ASN.1 schema.
 
-        If *isValue* is `True` then, in addition to its ASN.1 schema features,
-        this object can also be used like a Python built-in object (e.g. `int`,
-        `str`, `dict` etc.).
+        If *isValue* is :obj:`True` then, in addition to its ASN.1 schema features,
+        this object can also be used like a Python built-in object (e.g.
+        :class:`int`, :class:`str`, :class:`dict` etc.).
 
         Returns
         -------
         : :class:`bool`
-            :class:`False` if object represents just ASN.1 schema.
-            :class:`True` if object represents ASN.1 schema and can be used as a normal value.
+            :obj:`False` if object represents just ASN.1 schema.
+            :obj:`True` if object represents ASN.1 schema and can be used as a normal
+            value.
 
         Note
         ----
@@ -2959,7 +3168,7 @@ class Choice(Set):
 
     def clear(self):
         self._currentIdx = None
-        Set.clear(self)
+        return Set.clear(self)
 
     # compatibility stubs
 
@@ -2970,16 +3179,19 @@ class Choice(Set):
 class Any(OctetString):
     """Create |ASN.1| schema or value object.
 
-    |ASN.1| objects are immutable and duck-type Python 2 :class:`str` or Python 3
-    :class:`bytes`. When used in Unicode context, |ASN.1| type assumes "|encoding|"
-    serialisation.
+    |ASN.1| class is based on :class:`~pyasn1.type.base.SimpleAsn1Type`,
+    its objects are immutable and duck-type Python 2 :class:`str` or Python 3
+    :class:`bytes`. When used in Unicode context, |ASN.1| type assumes
+    "|encoding|" serialisation.
 
     Keyword Args
     ------------
-    value: :class:`str`, :class:`bytes` or |ASN.1| object
-        string (Python 2) or bytes (Python 3), alternatively unicode object
-        (Python 2) or string (Python 3) representing character string to be
-        serialised into octets (note `encoding` parameter) or |ASN.1| object.
+    value: :class:`unicode`, :class:`str`, :class:`bytes` or |ASN.1| object
+        :class:`str` (Python 2) or :class:`bytes` (Python 3), alternatively
+        :class:`unicode` object (Python 2) or :class:`str` (Python 3)
+        representing character string to be serialised into octets (note
+        `encoding` parameter) or |ASN.1| object.
+        If `value` is not given, schema object will be created.
 
     tagSet: :py:class:`~pyasn1.type.tag.TagSet`
         Object representing non-default ASN.1 tag(s)
@@ -3002,7 +3214,7 @@ class Any(OctetString):
 
     Raises
     ------
-    :py:class:`~pyasn1.error.PyAsn1Error`
+    ~pyasn1.error.ValueConstraintError, ~pyasn1.error.PyAsn1Error
         On constraint violation or bad initializer.
 
     Examples
