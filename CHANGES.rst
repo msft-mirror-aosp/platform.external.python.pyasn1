@@ -1,4 +1,63 @@
 
+Revision 0.4.6, released 31-07-2019
+-----------------------------------
+
+- Added previously missing `SET OF ANY` construct encoding/decoding support.
+- Added `omitEmptyOptionals` option which is respected by `Sequence`
+  and `Set` encoders. When `omitEmptyOptionals` is set to `True`, empty
+  initialized optional components are not encoded. Default is `False`.
+- New elements to `SequenceOf`/`SetOf` objects can now be added at any
+  position - the requirement for the new elements to reside at the end
+  of the existing ones (i.e. s[len(s)] = 123) is removed.
+- List-like slicing support added to `SequenceOf`/`SetOf` objects.
+- Removed default initializer from `SequenceOf`/`SetOf` types to ensure
+  consistent behaviour with the rest of ASN.1 types. Before this change,
+  `SequenceOf`/`SetOf` instances immediately become value objects behaving
+  like an empty list. With this change, `SequenceOf`/`SetOf` objects
+  remain schema objects unless a component is added or `.clear()` is
+  called.
+  This change can potentially cause incompatibilities with existing
+  pyasn1 objects which assume `SequenceOf`/`SetOf` instances are value
+  objects right upon instantiation.
+  The behaviour of `Sequence`/`Set` types depends on the `componentType`
+  initializer: if on `componentType` is given, the behaviour is the
+  same as `SequenceOf`/`SetOf` have. IF `componentType` is given, but
+  neither optional nor defaulted components are present, the created
+  instance remains schema object, If, however, either optional or
+  defaulted component isi present, the created instance immediately
+  becomes a value object.
+- Added `.reset()` method to all constructed types to turn value object
+  into a schema object.
+- Added `PyAsn1UnicodeDecodeError`/`PyAsn1UnicodeDecodeError` exceptions
+  to help the caller treating unicode errors happening internally
+  to pyasn1 at the upper layers.
+- Added support for subseconds CER/DER encoding edge cases in
+  `GeneralizedTime` codec.
+- Fixed 3-digit fractional seconds value CER/DER encoding of
+  `GeneralizedTime`.
+- Fixed `AnyDecoder` to accept possible `TagMap` as `asn1Spec`
+  to make dumping raw value operational
+
+Revision 0.4.5, released 29-12-2018
+-----------------------------------
+
+- Debug logging refactored for more efficiency when disabled and
+  for more functionality when in use. Specifically, the global
+  LOG object can easily be used from any function/method, not just
+  from codec main loop as it used to be.
+- More debug logging added to BER family of codecs to ease encoding
+  problems troubleshooting.
+- Copyright notice extended to the year 2019
+- Fixed defaulted constructed SEQUENCE component initialization.
+
+Revision 0.4.4, released 26-07-2018
+-----------------------------------
+
+- Fixed native encoder type map to include all ASN.1 types
+  rather than just ambiguous ones
+- Fixed crash in `.prettyPrint` of `Sequence` and `Set` occurring
+  at OPTIONAL components
+
 Revision 0.4.3, released 23-05-2018
 -----------------------------------
 
@@ -599,7 +658,7 @@ Revision 0.0.5a
 Revision 0.0.4a
 ---------------
 
-* Asn1ItemBase.prettyPrinter() -> \*.prettyPrint()
+* Asn1Type.prettyPrinter() -> \*.prettyPrint()
 
 Revision 0.0.3a
 ---------------
