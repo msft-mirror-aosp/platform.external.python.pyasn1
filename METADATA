@@ -9,10 +9,10 @@ third_party {
     type: GIT
     value: "https://github.com/etingof/pyasn1"
   }
-  version: "v0.4.6"
+  version: "v0.4.7"
   last_upgrade_date {
     year: 2019
-    month: 7
-    day: 31
+    month: 9
+    day: 3
   }
 }
