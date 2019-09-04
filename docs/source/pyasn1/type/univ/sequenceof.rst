@@ -6,9 +6,9 @@
 |ASN.1| type
 ------------
 
-.. autoclass:: pyasn1.type.univ.SequenceOf(componentType=NoValue(), tagSet=TagSet(), subtypeSpec=ConstraintsIntersection(), sizeSpec=ConstraintsIntersection())
-   :members: isValue, isSameTypeWith, isSuperTypeOf, tagSet, effectiveTagSet, tagMap, componentType, subtypeSpec, sizeSpec,
-             getComponentByPosition, setComponentByPosition, clear, reset
+.. autoclass:: pyasn1.type.univ.SequenceOf(componentType=NoValue(), tagSet=TagSet(), subtypeSpec=ConstraintsIntersection())
+   :members: isValue, isSameTypeWith, isSuperTypeOf, tagSet, effectiveTagSet, tagMap, componentType, subtypeSpec,
+             getComponentByPosition, setComponentByPosition, clear, reset, isInconsistent
 
    .. note::
 
