@@ -992,11 +992,13 @@ class SequenceOf(BaseTestCase):
         assert self.s1 == self.s2, '__cmp__() fails'
 
     def testSubtypeSpec(self):
-        s = self.s1.clone(subtypeSpec=constraint.ConstraintsUnion(
-            constraint.SingleValueConstraint(str2octs('abc'))
-        ))
+        s = self.s1.clone(
+            componentType=univ.OctetString().subtype(
+                subtypeSpec=constraint.SingleValueConstraint(str2octs('abc'))))
         try:
-            s.setComponentByPosition(0, univ.OctetString('abc'))
+            s.setComponentByPosition(
+                0, univ.OctetString().subtype(
+                    'abc', subtypeSpec=constraint.SingleValueConstraint(str2octs('abc'))))
         except PyAsn1Error:
             assert 0, 'constraint fails'
         try:
@@ -1006,7 +1008,7 @@ class SequenceOf(BaseTestCase):
                 s.setComponentByPosition(1, univ.OctetString('Abc'),
                                          verifyConstraints=False)
             except PyAsn1Error:
-                assert 0, 'constraint failes with verifyConstraints=True'
+                assert 0, 'constraint fails with verifyConstraints=False'
         else:
             assert 0, 'constraint fails'
 
@@ -1040,22 +1042,14 @@ class SequenceOf(BaseTestCase):
         else:
             pass
 
-    def testSizeSpec(self):
-        s = self.s1.clone(sizeSpec=constraint.ConstraintsUnion(
+    def testConsistency(self):
+        s = self.s1.clone(subtypeSpec=constraint.ConstraintsUnion(
             constraint.ValueSizeConstraint(1, 1)
         ))
         s.setComponentByPosition(0, univ.OctetString('abc'))
-        try:
-            s.verifySizeSpec()
-        except PyAsn1Error:
-            assert 0, 'size spec fails'
+        assert not s.isInconsistent, 'size spec fails'
         s.setComponentByPosition(1, univ.OctetString('abc'))
-        try:
-            s.verifySizeSpec()
-        except PyAsn1Error:
-            pass
-        else:
-            assert 0, 'size spec fails'
+        assert s.isInconsistent, 'size spec fails'
 
     def testGetComponentTagMap(self):
         assert self.s1.componentType.tagMap.presentTypes == {
@@ -1065,15 +1059,13 @@ class SequenceOf(BaseTestCase):
     def testSubtype(self):
         subtype = self.s1.subtype(
             implicitTag=tag.Tag(tag.tagClassPrivate, tag.tagFormatSimple, 2),
-            subtypeSpec=constraint.SingleValueConstraint(1, 3),
-            sizeSpec=constraint.ValueSizeConstraint(0, 1)
+            subtypeSpec=constraint.ValueSizeConstraint(0, 1)
         )
         subtype.clear()
         clone = self.s1.clone(
             tagSet=tag.TagSet(tag.Tag(tag.tagClassPrivate,
                                       tag.tagFormatSimple, 2)),
-            subtypeSpec=constraint.ConstraintsIntersection(constraint.SingleValueConstraint(1, 3)),
-            sizeSpec=constraint.ValueSizeConstraint(0, 1)
+            subtypeSpec=constraint.ValueSizeConstraint(0, 1)
         )
         clone.clear()
         assert clone == subtype
@@ -1256,6 +1248,37 @@ class SequenceOf(BaseTestCase):
         s.reset()
 
         assert not s.isValue
+
+    def testIsInconsistentSizeConstraint(self):
+
+        class SequenceOf(univ.SequenceOf):
+            componentType = univ.OctetString()
+            subtypeSpec = constraint.ValueSizeConstraint(0, 1)
+
+        s = SequenceOf()
+
+        assert s.isInconsistent
+
+        s[0] = 'test'
+
+        assert not s.isInconsistent
+
+        s[0] = 'test'
+        s[1] = 'test'
+
+        assert s.isInconsistent
+
+        s.clear()
+
+        assert not s.isInconsistent
+
+        s.reset()
+
+        assert s.isInconsistent
+
+        s[1] = 'test'
+
+        assert not s.isInconsistent
 
 
 class SequenceOfPicklingTestCase(unittest.TestCase):
@@ -1592,6 +1615,77 @@ class Sequence(BaseTestCase):
         s.reset()
 
         assert not s.isValue
+
+    def testIsInconsistentWithComponentsConstraint(self):
+
+        class Sequence(univ.Sequence):
+            componentType = namedtype.NamedTypes(
+                namedtype.OptionalNamedType('name', univ.OctetString()),
+                namedtype.DefaultedNamedType('age', univ.Integer(65))
+            )
+            subtypeSpec = constraint.WithComponentsConstraint(
+                ('name', constraint.ComponentPresentConstraint()),
+                ('age', constraint.ComponentAbsentConstraint())
+            )
+
+        s = Sequence()
+
+        assert s.isInconsistent
+
+        s[0] = 'test'
+
+        assert not s.isInconsistent
+
+        s[0] = 'test'
+        s[1] = 23
+
+        assert s.isInconsistent
+
+        s.clear()
+
+        assert s.isInconsistent
+
+        s.reset()
+
+        assert s.isInconsistent
+
+        s[1] = 23
+
+        assert s.isInconsistent
+
+    def testIsInconsistentSizeConstraint(self):
+
+        class Sequence(univ.Sequence):
+            componentType = namedtype.NamedTypes(
+                namedtype.OptionalNamedType('name', univ.OctetString()),
+                namedtype.DefaultedNamedType('age', univ.Integer(65))
+            )
+            subtypeSpec = constraint.ValueSizeConstraint(0, 1)
+
+        s = Sequence()
+
+        assert not s.isInconsistent
+
+        s[0] = 'test'
+
+        assert not s.isInconsistent
+
+        s[0] = 'test'
+        s[1] = 23
+
+        assert s.isInconsistent
+
+        s.clear()
+
+        assert not s.isInconsistent
+
+        s.reset()
+
+        assert s.isInconsistent
+
+        s[1] = 23
+
+        assert not s.isInconsistent
 
 
 class SequenceWithoutSchema(BaseTestCase):
