@@ -1,7 +1,7 @@
 #
 # This file is part of pyasn1 software.
 #
-# Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
+# Copyright (c) 2005-2018, Ilya Etingof <etingof@gmail.com>
 # License: http://snmplabs.com/pyasn1/license.html
 #
 import sys
@@ -49,10 +49,9 @@ class NamedType(object):
         representation = '%s=%r' % (self.name, self.asn1Object)
 
         if self.openType:
-            representation += ', open type %r' % self.openType
+            representation += ' openType: %r' % self.openType
 
-        return '<%s object, type %s>' % (
-            self.__class__.__name__, representation)
+        return '<%s object at 0x%x type %s>' % (self.__class__.__name__, id(self), representation)
 
     def __eq__(self, other):
         return self.__nameAndType == other
@@ -174,8 +173,7 @@ class NamedTypes(object):
 
     def __repr__(self):
         representation = ', '.join(['%r' % x for x in self.__namedTypes])
-        return '<%s object, types %s>' % (
-            self.__class__.__name__, representation)
+        return '<%s object at 0x%x types %s>' % (self.__class__.__name__, id(self), representation)
 
     def __eq__(self, other):
         return self.__namedTypes == other
@@ -267,18 +265,18 @@ class NamedTypes(object):
         return nameToPosMap
 
     def __computeAmbiguousTypes(self):
-        ambiguousTypes = {}
-        partialAmbiguousTypes = ()
+        ambigiousTypes = {}
+        partialAmbigiousTypes = ()
         for idx, namedType in reversed(tuple(enumerate(self.__namedTypes))):
             if namedType.isOptional or namedType.isDefaulted:
-                partialAmbiguousTypes = (namedType,) + partialAmbiguousTypes
+                partialAmbigiousTypes = (namedType,) + partialAmbigiousTypes
             else:
-                partialAmbiguousTypes = (namedType,)
-            if len(partialAmbiguousTypes) == len(self.__namedTypes):
-                ambiguousTypes[idx] = self
+                partialAmbigiousTypes = (namedType,)
+            if len(partialAmbigiousTypes) == len(self.__namedTypes):
+                ambigiousTypes[idx] = self
             else:
-                ambiguousTypes[idx] = NamedTypes(*partialAmbiguousTypes, **dict(terminal=True))
-        return ambiguousTypes
+                ambigiousTypes[idx] = NamedTypes(*partialAmbigiousTypes, **dict(terminal=True))
+        return ambigiousTypes
 
     def getTypeByPosition(self, idx):
         """Return ASN.1 type object by its position in fields set.
@@ -295,7 +293,7 @@ class NamedTypes(object):
 
         Raises
         ------
-        ~pyasn1.error.PyAsn1Error
+        : :class:`~pyasn1.error.PyAsn1Error`
             If given position is out of fields range
         """
         try:
@@ -319,7 +317,7 @@ class NamedTypes(object):
 
         Raises
         ------
-        ~pyasn1.error.PyAsn1Error
+        : :class:`~pyasn1.error.PyAsn1Error`
             If *tagSet* is not present or ASN.1 types are not unique within callee *NamedTypes*
         """
         try:
@@ -343,7 +341,7 @@ class NamedTypes(object):
 
         Raises
         ------
-        ~pyasn1.error.PyAsn1Error
+        : :class:`~pyasn1.error.PyAsn1Error`
             If given field name is not present in callee *NamedTypes*
         """
         try:
@@ -367,7 +365,7 @@ class NamedTypes(object):
 
         Raises
         ------
-        ~pyasn1.error.PyAsn1Error
+        : :class:`~pyasn1.error.PyAsn1Error`
             If *name* is not present or not unique within callee *NamedTypes*
         """
         try:
@@ -396,7 +394,7 @@ class NamedTypes(object):
 
         Raises
         ------
-        ~pyasn1.error.PyAsn1Error
+        : :class:`~pyasn1.error.PyAsn1Error`
             If given position is out of fields range
         """
         try:
@@ -428,7 +426,7 @@ class NamedTypes(object):
 
         Raises
         ------
-        ~pyasn1.error.PyAsn1Error
+        : :class:`~pyasn1.error.PyAsn1Error`
             If *tagSet* is not present or not unique within callee *NamedTypes*
             or *idx* is out of fields range
         """

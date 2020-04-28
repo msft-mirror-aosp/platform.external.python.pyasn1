@@ -1,7 +1,7 @@
 #
 # This file is part of pyasn1 software.
 #
-# Copyright (c) 2005-2019, Ilya Etingof <etingof@gmail.com>
+# Copyright (c) 2005-2018, Ilya Etingof <etingof@gmail.com>
 # License: http://snmplabs.com/pyasn1/license.html
 #
 import sys
@@ -12,8 +12,7 @@ from pyasn1.type import constraint
 from pyasn1.type import tag
 from pyasn1.type import tagmap
 
-__all__ = ['Asn1Item', 'Asn1Type', 'SimpleAsn1Type',
-           'ConstructedAsn1Type']
+__all__ = ['Asn1Item', 'Asn1ItemBase', 'AbstractSimpleAsn1Item', 'AbstractConstructedAsn1Item']
 
 
 class Asn1Item(object):
@@ -26,17 +25,7 @@ class Asn1Item(object):
         return Asn1Item._typeCounter
 
 
-class Asn1Type(Asn1Item):
-    """Base class for all classes representing ASN.1 types.
-
-    In the user code, |ASN.1| class is normally used only for telling
-    ASN.1 objects from others.
-
-    Note
-    ----
-    For as long as ASN.1 is concerned, a way to compare ASN.1 types
-    is to use :meth:`isSameTypeWith` and :meth:`isSuperTypeOf` methods.
-    """
+class Asn1ItemBase(Asn1Item):
     #: Set or return a :py:class:`~pyasn1.type.tag.TagSet` object representing
     #: ASN.1 tag(s) associated with |ASN.1| type.
     tagSet = tag.TagSet()
@@ -102,8 +91,8 @@ class Asn1Type(Asn1Item):
         Returns
         -------
         : :class:`bool`
-            :obj:`True` if *other* is |ASN.1| type,
-            :obj:`False` otherwise.
+            :class:`True` if *other* is |ASN.1| type,
+            :class:`False` otherwise.
         """
         return (self is other or
                 (not matchTags or self.tagSet == other.tagSet) and
@@ -126,8 +115,8 @@ class Asn1Type(Asn1Item):
         Returns
         -------
             : :class:`bool`
-                :obj:`True` if *other* is a subtype of |ASN.1| type,
-                :obj:`False` otherwise.
+                :class:`True` if *other* is a subtype of |ASN.1| type,
+                :class:`False` otherwise.
         """
         return (not matchTags or
                 (self.tagSet.isSuperTagSetOf(other.tagSet)) and
@@ -157,12 +146,8 @@ class Asn1Type(Asn1Item):
     def getSubtypeSpec(self):
         return self.subtypeSpec
 
-    # backward compatibility
     def hasValue(self):
         return self.isValue
-
-# Backward compatibility
-Asn1ItemBase = Asn1Type
 
 
 class NoValue(object):
@@ -236,31 +221,19 @@ class NoValue(object):
         raise error.PyAsn1Error('Attempted "%s" operation on ASN.1 schema object' % attr)
 
     def __repr__(self):
-        return '<%s object>' % self.__class__.__name__
+        return '<%s object at 0x%x>' % (self.__class__.__name__, id(self))
 
 
 noValue = NoValue()
 
 
-class SimpleAsn1Type(Asn1Type):
-    """Base class for all simple classes representing ASN.1 types.
-
-    ASN.1 distinguishes types by their ability to hold other objects.
-    Scalar types are known as *simple* in ASN.1.
-
-    In the user code, |ASN.1| class is normally used only for telling
-    ASN.1 objects from others.
-
-    Note
-    ----
-    For as long as ASN.1 is concerned, a way to compare ASN.1 types
-    is to use :meth:`isSameTypeWith` and :meth:`isSuperTypeOf` methods.
-    """
+# Base class for "simple" ASN.1 objects. These are immutable.
+class AbstractSimpleAsn1Item(Asn1ItemBase):
     #: Default payload value
     defaultValue = noValue
 
     def __init__(self, value=noValue, **kwargs):
-        Asn1Type.__init__(self, **kwargs)
+        Asn1ItemBase.__init__(self, **kwargs)
         if value is noValue:
             value = self.defaultValue
         else:
@@ -275,18 +248,19 @@ class SimpleAsn1Type(Asn1Type):
         self._value = value
 
     def __repr__(self):
-        representation = '%s %s object' % (
-            self.__class__.__name__, self.isValue and 'value' or 'schema')
+        representation = '%s %s object at 0x%x' % (
+            self.__class__.__name__, self.isValue and 'value' or 'schema', id(self)
+        )
 
         for attr, value in self.readOnly.items():
             if value:
-                representation += ', %s %s' % (attr, value)
+                representation += ' %s %s' % (attr, value)
 
         if self.isValue:
             value = self.prettyPrint()
             if len(value) > 32:
                 value = value[:16] + '...' + value[-16:]
-            representation += ', payload [%s]' % value
+            representation += ' payload [%s]' % value
 
         return '<%s>' % representation
 
@@ -322,18 +296,17 @@ class SimpleAsn1Type(Asn1Type):
     def isValue(self):
         """Indicate that |ASN.1| object represents ASN.1 value.
 
-        If *isValue* is :obj:`False` then this object represents just
-        ASN.1 schema.
+        If *isValue* is `False` then this object represents just ASN.1 schema.
 
-        If *isValue* is :obj:`True` then, in addition to its ASN.1 schema
-        features, this object can also be used like a Python built-in object
-        (e.g. :class:`int`, :class:`str`, :class:`dict` etc.).
+        If *isValue* is `True` then, in addition to its ASN.1 schema features,
+        this object can also be used like a Python built-in object (e.g. `int`,
+        `str`, `dict` etc.).
 
         Returns
         -------
         : :class:`bool`
-            :obj:`False` if object represents just ASN.1 schema.
-            :obj:`True` if object represents ASN.1 schema and can be used as a normal value.
+            :class:`False` if object represents just ASN.1 schema.
+            :class:`True` if object represents ASN.1 schema and can be used as a normal value.
 
         Note
         ----
@@ -370,10 +343,10 @@ class SimpleAsn1Type(Asn1Type):
 
             value = self._value
 
-        initializers = self.readOnly.copy()
-        initializers.update(kwargs)
+        initilaizers = self.readOnly.copy()
+        initilaizers.update(kwargs)
 
-        return self.__class__(value, **initializers)
+        return self.__class__(value, **initilaizers)
 
     def subtype(self, value=noValue, **kwargs):
         """Create a specialization of |ASN.1| schema or value object.
@@ -452,11 +425,9 @@ class SimpleAsn1Type(Asn1Type):
     def prettyPrint(self, scope=0):
         return self.prettyOut(self._value)
 
+    # noinspection PyUnusedLocal
     def prettyPrintType(self, scope=0):
         return '%s -> %s' % (self.tagSet, self.__class__.__name__)
-
-# Backward compatibility
-AbstractSimpleAsn1Item = SimpleAsn1Type
 
 #
 # Constructed types:
@@ -478,102 +449,67 @@ AbstractSimpleAsn1Item = SimpleAsn1Type
 #
 
 
-class ConstructedAsn1Type(Asn1Type):
-    """Base class for all constructed classes representing ASN.1 types.
+class AbstractConstructedAsn1Item(Asn1ItemBase):
 
-    ASN.1 distinguishes types by their ability to hold other objects.
-    Those "nesting" types are known as *constructed* in ASN.1.
-
-    In the user code, |ASN.1| class is normally used only for telling
-    ASN.1 objects from others.
-
-    Note
-    ----
-    For as long as ASN.1 is concerned, a way to compare ASN.1 types
-    is to use :meth:`isSameTypeWith` and :meth:`isSuperTypeOf` methods.
-    """
-
-    #: If :obj:`True`, requires exact component type matching,
+    #: If `True`, requires exact component type matching,
     #: otherwise subtype relation is only enforced
     strictConstraints = False
 
     componentType = None
-
-    # backward compatibility, unused
-    sizeSpec = constraint.ConstraintsIntersection()
+    sizeSpec = None
 
     def __init__(self, **kwargs):
         readOnly = {
             'componentType': self.componentType,
-            # backward compatibility, unused
             'sizeSpec': self.sizeSpec
         }
-
-        # backward compatibility: preserve legacy sizeSpec support
-        kwargs = self._moveSizeSpec(**kwargs)
-
         readOnly.update(kwargs)
 
-        Asn1Type.__init__(self, **readOnly)
+        Asn1ItemBase.__init__(self, **readOnly)
 
-    def _moveSizeSpec(self, **kwargs):
-        # backward compatibility, unused
-        sizeSpec = kwargs.pop('sizeSpec', self.sizeSpec)
-        if sizeSpec:
-            subtypeSpec = kwargs.pop('subtypeSpec', self.subtypeSpec)
-            if subtypeSpec:
-                subtypeSpec = sizeSpec
-
-            else:
-                subtypeSpec += sizeSpec
-
-            kwargs['subtypeSpec'] = subtypeSpec
-
-        return kwargs
+        self._componentValues = []
 
     def __repr__(self):
-        representation = '%s %s object' % (
-            self.__class__.__name__, self.isValue and 'value' or 'schema'
+        representation = '%s %s object at 0x%x' % (
+            self.__class__.__name__, self.isValue and 'value' or 'schema', id(self)
         )
 
         for attr, value in self.readOnly.items():
             if value is not noValue:
-                representation += ', %s=%r' % (attr, value)
+                representation += ' %s=%r' % (attr, value)
 
-        if self.isValue and self.components:
-            representation += ', payload [%s]' % ', '.join(
-                [repr(x) for x in self.components])
+        if self.isValue and self._componentValues:
+            representation += ' payload [%s]' % ', '.join([repr(x) for x in self._componentValues])
 
         return '<%s>' % representation
 
     def __eq__(self, other):
-        return self is other or self.components == other
+        return self is other and True or self._componentValues == other
 
     def __ne__(self, other):
-        return self.components != other
+        return self._componentValues != other
 
     def __lt__(self, other):
-        return self.components < other
+        return self._componentValues < other
 
     def __le__(self, other):
-        return self.components <= other
+        return self._componentValues <= other
 
     def __gt__(self, other):
-        return self.components > other
+        return self._componentValues > other
 
     def __ge__(self, other):
-        return self.components >= other
+        return self._componentValues >= other
 
     if sys.version_info[0] <= 2:
         def __nonzero__(self):
-            return bool(self.components)
+            return self._componentValues and True or False
     else:
         def __bool__(self):
-            return bool(self.components)
+            return self._componentValues and True or False
 
-    @property
-    def components(self):
-        raise error.PyAsn1Error('Method not implemented')
+    def __len__(self):
+        return len(self._componentValues)
 
     def _cloneComponentValues(self, myClone, cloneValueFlag):
         pass
@@ -599,14 +535,15 @@ class ConstructedAsn1Type(Asn1Type):
         Note
         ----
         Due to the mutable nature of the |ASN.1| object, even if no arguments
-        are supplied, a new |ASN.1| object will be created and returned.
+        are supplied, new |ASN.1| object will always be created as a shallow
+        copy of `self`.
         """
         cloneValueFlag = kwargs.pop('cloneValueFlag', False)
 
-        initializers = self.readOnly.copy()
-        initializers.update(kwargs)
+        initilaizers = self.readOnly.copy()
+        initilaizers.update(kwargs)
 
-        clone = self.__class__(**initializers)
+        clone = self.__class__(**initilaizers)
 
         if cloneValueFlag:
             self._cloneComponentValues(clone, cloneValueFlag)
@@ -651,8 +588,9 @@ class ConstructedAsn1Type(Asn1Type):
 
         Note
         ----
-        Due to the mutable nature of the |ASN.1| object, even if no arguments
-        are supplied, a new |ASN.1| object will be created and returned.
+        Due to the immutable nature of the |ASN.1| object, if no arguments
+        are supplied, no new |ASN.1| object will be created and `self` will
+        be returned instead.
         """
 
         initializers = self.readOnly.copy()
@@ -677,6 +615,9 @@ class ConstructedAsn1Type(Asn1Type):
 
         return clone
 
+    def verifySizeSpec(self):
+        self.sizeSpec(self)
+
     def getComponentByPosition(self, idx):
         raise error.PyAsn1Error('Method not implemented')
 
@@ -690,6 +631,9 @@ class ConstructedAsn1Type(Asn1Type):
             self[k] = kwargs[k]
         return self
 
+    def clear(self):
+        self._componentValues = []
+
     # backward compatibility
 
     def setDefaultComponents(self):
@@ -697,11 +641,3 @@ class ConstructedAsn1Type(Asn1Type):
 
     def getComponentType(self):
         return self.componentType
-
-    # backward compatibility, unused
-    def verifySizeSpec(self):
-        self.subtypeSpec(self)
-
-
-        # Backward compatibility
-AbstractConstructedAsn1Item = ConstructedAsn1Type
